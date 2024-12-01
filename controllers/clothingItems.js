@@ -39,9 +39,9 @@ module.exports.createClothingItem = (req, res) => {
 };
 
 module.exports.deleteClothingItem = (req, res) => {
-  console.log(req.params._id);
+  const itemId = req.params_id;
 
-  ClothingItem.findByIdAndRemove(req.params.id)
+  ClothingItem.findByIdAndRemove(itemId)
     .orFail(() => {
       const error = new Error("Clothing item not found");
       error.statusCode = 404;
