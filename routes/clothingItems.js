@@ -3,11 +3,14 @@ const {
   getClothingItems,
   createClothingItem,
   deleteClothingItem,
+  dislikeItem,
+  likeItem,
 } = require("../controllers/clothingItems");
 
 router.get("/", getClothingItems);
 router.post("/", createClothingItem);
 router.delete("/:itemId", deleteClothingItem);
-router.patch("/:itemId/likes");
+router.patch("/:itemId/likes", likeItem);
+router.delete("/:itemId/likes", dislikeItem);
 
 module.exports = router;

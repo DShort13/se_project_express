@@ -39,6 +39,7 @@ module.exports.createClothingItem = (req, res) => {
 };
 
 module.exports.deleteClothingItem = (req, res) => {
+  console.log(req.params_id);
   const itemId = req.params_id;
 
   ClothingItem.findByIdAndRemove(itemId)
@@ -48,6 +49,72 @@ module.exports.deleteClothingItem = (req, res) => {
       throw error;
     })
     .then((item) => res.status(204).send({ data: item }))
+    .catch((err) => {
+      console.log(err.name);
+      console.error(err);
+      if (err.message === "Clothing item not found") {
+        res.status(NOT_FOUND).send({ message: "Clothing item not found" });
+      } else if (err.name === "CastError") {
+        res
+          .status(BAD_REQUEST)
+          .send({ message: "Invalid input, please try again" });
+      } else {
+        res
+          .status(DEFAULT)
+          .send({ message: "An error has occurred on the server" });
+      }
+    });
+};
+
+module.exports.likeItem = (req, res) => {
+  console.log(req.params_id);
+
+  ClothingItem.findByIdAndUpdate(
+    req.params.itemId,
+    {
+      $addToSet: { likes: req.params_id },
+    },
+    { new: true }
+  )
+    .orFail(() => {
+      const error = new Error("Clothing item not found");
+      error.statusCode = 404;
+      throw error;
+    })
+    .then((item) => res.status(200).send({ data: item }))
+    .catch((err) => {
+      console.log(err.name);
+      console.error(err);
+      if (err.message === "Clothing item not found") {
+        res.status(NOT_FOUND).send({ message: "Clothing item not found" });
+      } else if (err.name === "CastError") {
+        res
+          .status(BAD_REQUEST)
+          .send({ message: "Invalid input, please try again" });
+      } else {
+        res
+          .status(DEFAULT)
+          .send({ message: "An error has occurred on the server" });
+      }
+    });
+};
+
+module.exports.dislikeItem = (req, res) => {
+  console.log(req.params_id);
+
+  ClothingItem.findByIdAndUpdate(
+    req.params.itemId,
+    {
+      $pull: { likes: req.params_id },
+    },
+    { new: true }
+  )
+    .orFail(() => {
+      const error = new Error("Clothing item not found");
+      error.statusCode = 404;
+      throw error;
+    })
+    .then((item) => res.status(200).send({ data: item }))
     .catch((err) => {
       console.log(err.name);
       console.error(err);
