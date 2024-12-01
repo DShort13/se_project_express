@@ -1,15 +1,40 @@
 const User = require("../models/user");
+const { DEFAULT, NOT_FOUND, BAD_REQUEST } = require("../utils/errors");
 
 module.exports.getUsers = (req, res) => {
   User.find({})
     .then((users) => res.status(200).send({ data: users }))
-    .catch((e) => res.status(500).send({ message: "Error from getUsers", e }));
+    .catch((err) => {
+      console.error(err);
+      res
+        .status(DEFAULT)
+        .send({ message: "An error has occurred on the server" });
+    });
 };
 
 module.exports.getUser = (req, res) => {
-  User.findById(req.params.id)
+  User.findById(req.params._id)
+    .orFail(() => {
+      const error = new Error("User ID not found");
+      error.statusCode = 404;
+      throw error;
+    })
     .then((user) => res.status(200).send({ data: user }))
-    .catch((e) => res.status(500).send({ message: "Error from getUser", e }));
+    .catch((err) => {
+      console.log(err.name);
+      console.error(err);
+      if (err.message === "User ID not found") {
+        res.status(NOT_FOUND).send({ message: "User not found" });
+      } else if (err.name === "CastError") {
+        res
+          .status(BAD_REQUEST)
+          .send({ message: "Invalid input, please try again" });
+      } else {
+        res
+          .status(DEFAULT)
+          .send({ message: "An error has occurred on the server" });
+      }
+    });
 };
 
 module.exports.createUser = (req, res) => {
@@ -20,7 +45,17 @@ module.exports.createUser = (req, res) => {
 
   User.create({ name, avatar })
     .then((user) => res.status(201).send({ data: user }))
-    .catch((e) =>
-      res.status(500).send({ message: "Error from createUser", e })
-    );
+    .catch((err) => {
+      console.log(err.name);
+      console.error(err);
+      if (err.name === "ValidationError") {
+        res
+          .status(BAD_REQUEST)
+          .send({ message: "Invalid input, please try again" });
+      } else {
+        res
+          .status(DEFAULT)
+          .send({ message: "An error has occurred on the server" });
+      }
+    });
 };
