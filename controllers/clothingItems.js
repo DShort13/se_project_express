@@ -15,9 +15,9 @@ module.exports.createClothingItem = (req, res) => {
   console.log(req);
   console.log(req.body);
 
-  const { name, weather, imageUrl, ownerId } = req.body;
+  const { name, weather, imageUrl } = req.body;
 
-  ClothingItem.create({ name, weather, imageUrl, owner: ownerId })
+  ClothingItem.create({ name, weather, imageUrl, owner: req.user._id })
     .then((item) => {
       console.log(item);
       res.status(201).send({ data: item });
@@ -39,16 +39,16 @@ module.exports.createClothingItem = (req, res) => {
 };
 
 module.exports.deleteClothingItem = (req, res) => {
-  console.log(req.params_id);
-  const itemId = req.params_id;
+  console.log(req.params._id);
+  const { itemId } = req.params;
 
-  ClothingItem.findByIdAndRemove(itemId)
+  ClothingItem.findByIdAndDelete(itemId)
     .orFail(() => {
       const error = new Error("Clothing item not found");
       error.statusCode = 404;
       throw error;
     })
-    .then((item) => res.status(204).send({ data: item }))
+    .then((item) => res.status(200).send({ data: item }))
     .catch((err) => {
       console.log(err.name);
       console.error(err);
@@ -67,12 +67,12 @@ module.exports.deleteClothingItem = (req, res) => {
 };
 
 module.exports.likeItem = (req, res) => {
-  console.log(req.params_id);
+  console.log(req.params._id);
 
   ClothingItem.findByIdAndUpdate(
     req.params.itemId,
     {
-      $addToSet: { likes: req.params_id },
+      $addToSet: { likes: req.user._id },
     },
     { new: true }
   )
@@ -100,12 +100,12 @@ module.exports.likeItem = (req, res) => {
 };
 
 module.exports.dislikeItem = (req, res) => {
-  console.log(req.params_id);
+  console.log(req.params._id);
 
   ClothingItem.findByIdAndUpdate(
     req.params.itemId,
     {
-      $pull: { likes: req.params_id },
+      $pull: { likes: req.user._id },
     },
     { new: true }
   )

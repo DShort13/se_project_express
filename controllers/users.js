@@ -13,7 +13,7 @@ module.exports.getUsers = (req, res) => {
 };
 
 module.exports.getUser = (req, res) => {
-  const userId = req.params_id;
+  const { userId } = req.params;
 
   User.findById(userId)
     .orFail(() => {
