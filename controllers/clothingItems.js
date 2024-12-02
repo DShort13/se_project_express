@@ -4,10 +4,12 @@ const { DEFAULT, NOT_FOUND, BAD_REQUEST } = require("../utils/errors");
 module.exports.getClothingItems = (req, res) => {
   ClothingItem.find({})
     .populate("owner")
-    .then((items) => res.status(200).send({ data: items }))
+    .then((items) => res.send({ data: items }))
     .catch((err) => {
       console.error(err);
-      res.status(NOT_FOUND).send({ message: "Item not found" });
+      res
+        .status(DEFAULT)
+        .send({ message: "An error has occurred on the server" });
     });
 };
 
@@ -41,7 +43,7 @@ module.exports.deleteClothingItem = (req, res) => {
       error.statusCode = 404;
       throw error;
     })
-    .then((item) => res.status(200).send({ data: item }))
+    .then((item) => res.send({ data: item }))
     .catch((err) => {
       console.error(err);
       if (err.message === "Clothing item not found") {
@@ -71,7 +73,7 @@ module.exports.likeItem = (req, res) => {
       error.statusCode = 404;
       throw error;
     })
-    .then((item) => res.status(200).send({ data: item }))
+    .then((item) => res.send({ data: item }))
     .catch((err) => {
       console.error(err);
       if (err.message === "Clothing item not found") {
@@ -101,7 +103,7 @@ module.exports.dislikeItem = (req, res) => {
       error.statusCode = 404;
       throw error;
     })
-    .then((item) => res.status(200).send({ data: item }))
+    .then((item) => res.send({ data: item }))
     .catch((err) => {
       console.error(err);
       if (err.message === "Clothing item not found") {

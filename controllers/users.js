@@ -3,7 +3,7 @@ const { DEFAULT, NOT_FOUND, BAD_REQUEST } = require("../utils/errors");
 
 module.exports.getUsers = (req, res) => {
   User.find({})
-    .then((users) => res.status(200).send({ data: users }))
+    .then((users) => res.send({ data: users }))
     .catch((err) => {
       console.error(err);
       res
@@ -21,7 +21,7 @@ module.exports.getUser = (req, res) => {
       error.statusCode = 404;
       throw error;
     })
-    .then((user) => res.status(200).send({ data: user }))
+    .then((user) => res.send({ data: user }))
     .catch((err) => {
       console.error(err);
       if (err.message === "User ID not found") {
