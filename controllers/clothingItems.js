@@ -12,19 +12,13 @@ module.exports.getClothingItems = (req, res) => {
 };
 
 module.exports.createClothingItem = (req, res) => {
-  console.log(req);
-  console.log(req.body);
-
   const { name, weather, imageUrl } = req.body;
 
   ClothingItem.create({ name, weather, imageUrl, owner: req.user._id })
     .then((item) => {
-      console.log(item);
       res.status(201).send({ data: item });
-      console.log(req.user._id);
     })
     .catch((err) => {
-      console.log(err.name);
       console.error(err);
       if (err.name === "ValidationError") {
         res
@@ -39,7 +33,6 @@ module.exports.createClothingItem = (req, res) => {
 };
 
 module.exports.deleteClothingItem = (req, res) => {
-  console.log(req.params._id);
   const { itemId } = req.params;
 
   ClothingItem.findByIdAndDelete(itemId)
@@ -50,7 +43,6 @@ module.exports.deleteClothingItem = (req, res) => {
     })
     .then((item) => res.status(200).send({ data: item }))
     .catch((err) => {
-      console.log(err.name);
       console.error(err);
       if (err.message === "Clothing item not found") {
         res.status(NOT_FOUND).send({ message: "Clothing item not found" });
@@ -67,8 +59,6 @@ module.exports.deleteClothingItem = (req, res) => {
 };
 
 module.exports.likeItem = (req, res) => {
-  console.log(req.params._id);
-
   ClothingItem.findByIdAndUpdate(
     req.params.itemId,
     {
@@ -83,7 +73,6 @@ module.exports.likeItem = (req, res) => {
     })
     .then((item) => res.status(200).send({ data: item }))
     .catch((err) => {
-      console.log(err.name);
       console.error(err);
       if (err.message === "Clothing item not found") {
         res.status(NOT_FOUND).send({ message: "Clothing item not found" });
@@ -100,8 +89,6 @@ module.exports.likeItem = (req, res) => {
 };
 
 module.exports.dislikeItem = (req, res) => {
-  console.log(req.params._id);
-
   ClothingItem.findByIdAndUpdate(
     req.params.itemId,
     {
@@ -116,7 +103,6 @@ module.exports.dislikeItem = (req, res) => {
     })
     .then((item) => res.status(200).send({ data: item }))
     .catch((err) => {
-      console.log(err.name);
       console.error(err);
       if (err.message === "Clothing item not found") {
         res.status(NOT_FOUND).send({ message: "Clothing item not found" });

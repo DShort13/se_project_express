@@ -23,7 +23,6 @@ module.exports.getUser = (req, res) => {
     })
     .then((user) => res.status(200).send({ data: user }))
     .catch((err) => {
-      console.log(err.name);
       console.error(err);
       if (err.message === "User ID not found") {
         res.status(NOT_FOUND).send({ message: "User not found" });
@@ -40,15 +39,11 @@ module.exports.getUser = (req, res) => {
 };
 
 module.exports.createUser = (req, res) => {
-  console.log(req);
-  console.log(req.body);
-
   const { name, avatar } = req.body;
 
   User.create({ name, avatar })
     .then((user) => res.status(201).send({ data: user }))
     .catch((err) => {
-      console.log(err.name);
       console.error(err);
       if (err.name === "ValidationError") {
         res
