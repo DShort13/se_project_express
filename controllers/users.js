@@ -38,10 +38,10 @@ module.exports.getUser = (req, res) => {
     });
 };
 
-module.exports.createUser = (req, res) => {
-  const { name, avatar } = req.body;
+module.exports.createUser = (req, res, next) => {
+  const { name, email, password, avatar } = req.body;
 
-  User.create({ name, avatar })
+  User.create({ name, email, password, avatar })
     .then((user) => res.status(201).send({ data: user }))
     .catch((err) => {
       console.error(err);
