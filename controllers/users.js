@@ -1,5 +1,11 @@
+const bcrypt = require("bcryptjs");
+
 const User = require("../models/user");
+
 const { DEFAULT, NOT_FOUND, BAD_REQUEST } = require("../utils/errors");
+const ConflictError = require("../utils/Errors/ConflictError");
+
+const mongoDuplicateError = 11000;
 
 module.exports.getUsers = (req, res) => {
   User.find({})
@@ -39,20 +45,36 @@ module.exports.getUser = (req, res) => {
 };
 
 module.exports.createUser = (req, res, next) => {
-  const { name, email, password, avatar } = req.body;
+  const { name, email, avatar } = req.body;
 
-  User.create({ name, email, password, avatar })
-    .then((user) => res.status(201).send({ data: user }))
-    .catch((err) => {
-      console.error(err);
-      if (err.name === "ValidationError") {
-        res
-          .status(BAD_REQUEST)
-          .send({ message: "Invalid input, please try again" });
-      } else {
-        res
-          .status(DEFAULT)
-          .send({ message: "An error has occurred on the server" });
-      }
+  return User.findOne({ email }).then((existingUser) => {
+    if (existingUser) {
+      throw new ConflictError("User already exists");
+    }
+
+    bcrypt.hash(req.body.password, 10).then((hash) => {
+      User.create({ name, email, password: hash, avatar })
+        .then((user) =>
+          res
+            .status(201)
+            .send({ name: user.name, email: user.email, avatar: user.avatar })
+        )
+        .catch((err) => {
+          console.error(err);
+          if (err.code === mongoDuplicateError) {
+            res
+              .status(409)
+              .send({ message: "A user with this email already exists" });
+          } else if (err.name === "ValidationError") {
+            res
+              .status(BAD_REQUEST)
+              .send({ message: "Invalid input, please try again" });
+          } else {
+            res
+              .status(DEFAULT)
+              .send({ message: "An error has occurred on the server" });
+          }
+        });
     });
+  });
 };
