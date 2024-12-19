@@ -1,13 +1,20 @@
+const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 
 const User = require("../models/user");
 
-const { DEFAULT, NOT_FOUND, BAD_REQUEST } = require("../utils/errors");
+const { JWT_SECRET } = require("../utils/config");
+const {
+  DEFAULT,
+  NOT_FOUND,
+  BAD_REQUEST,
+  UNAUTHORISED,
+} = require("../utils/errors");
 const ConflictError = require("../utils/Errors/ConflictError");
 
 const mongoDuplicateError = 11000;
 
-module.exports.getUsers = (req, res) => {
+const getUsers = (req, res) => {
   User.find({})
     .then((users) => res.send({ data: users }))
     .catch((err) => {
@@ -18,7 +25,7 @@ module.exports.getUsers = (req, res) => {
     });
 };
 
-module.exports.getUser = (req, res) => {
+const getUser = (req, res) => {
   const { userId } = req.params;
 
   User.findById(userId)
@@ -44,7 +51,7 @@ module.exports.getUser = (req, res) => {
     });
 };
 
-module.exports.createUser = (req, res, next) => {
+const createUser = (req, res, next) => {
   const { name, email, avatar } = req.body;
 
   return User.findOne({ email }).then((existingUser) => {
@@ -78,3 +85,26 @@ module.exports.createUser = (req, res, next) => {
     });
   });
 };
+
+const login = (req, res) => {
+  const { email, password } = req.body;
+
+  User.findOne(email, password)
+    .then((user) => {
+      const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
+        expiresIn: "7d",
+      });
+
+      res.send({ token });
+    })
+    .catch((err) => {
+      console.error(err);
+      if (err.message === "Incorrect email or password") {
+        res
+          .status(UNAUTHORISED)
+          .send({ message: "Incorrect email or password" });
+      }
+    });
+};
+
+module.exports = { getUsers, getUser, createUser, login };
