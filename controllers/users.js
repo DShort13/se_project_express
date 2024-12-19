@@ -51,7 +51,7 @@ const getUser = (req, res) => {
     });
 };
 
-const createUser = (req, res, next) => {
+const createUser = (req, res) => {
   const { name, email, avatar } = req.body;
 
   return User.findOne({ email }).then((existingUser) => {
