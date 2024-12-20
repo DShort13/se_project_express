@@ -1,5 +1,6 @@
 const ClothingItem = require("../models/clothingItem");
 const { DEFAULT, NOT_FOUND, BAD_REQUEST } = require("../utils/errors");
+const ForbiddenError = require("../utils/Errors/ForbiddenError");
 
 module.exports.getClothingItems = (req, res) => {
   ClothingItem.find({})
@@ -37,13 +38,25 @@ module.exports.createClothingItem = (req, res) => {
 module.exports.deleteClothingItem = (req, res) => {
   const { itemId } = req.params;
 
-  ClothingItem.findByIdAndDelete(itemId)
+  ClothingItem.findById(itemId)
     .orFail(() => {
       const error = new Error("Clothing item not found");
       error.statusCode = 404;
       throw error;
     })
-    .then((item) => res.send({ data: item }))
+    .then((item) => {
+      if (item.owner !== req.user._id) {
+        throw new ForbiddenError("This item is not available to you");
+      }
+
+      ClothingItem.findByIdAndDelete(itemId)
+        .orFail(() => {
+          const error = new Error("Clothing item not found");
+          error.statusCode = 404;
+          throw error;
+        })
+        .then(() => res.send({ message: "Item deleted" }));
+    })
     .catch((err) => {
       console.error(err);
       if (err.message === "Clothing item not found") {
