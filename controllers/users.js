@@ -120,7 +120,7 @@ const updateProfile = (req, res) => {
 const login = (req, res) => {
   const { email, password } = req.body;
 
-  User.findOne(email, password)
+  User.findUserByCredentials(email, password)
     .then((user) => {
       const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
         expiresIn: "7d",
@@ -138,4 +138,4 @@ const login = (req, res) => {
     });
 };
 
-module.exports = { getUsers, getCurrentUser, createUser, login };
+module.exports = { getUsers, getCurrentUser, createUser, updateProfile, login };
