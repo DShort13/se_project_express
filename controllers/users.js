@@ -86,6 +86,37 @@ const createUser = (req, res) => {
   });
 };
 
+const updateProfile = (req, res) => {
+  const userId = req.user._id;
+  const { name, avatar } = req.body;
+
+  User.findByIdAndUpdate(
+    userId,
+    { name, avatar },
+    { new: true, runValidators: true }
+  )
+    .orFail(() => {
+      const error = new Error("User ID not found");
+      error.statusCode = 404;
+      throw error;
+    })
+    .then((user) => res.send({ data: user }))
+    .catch((err) => {
+      console.error(err);
+      if (err.message === "User ID not found") {
+        res.status(NOT_FOUND).send({ message: "User not found" });
+      } else if (err.name === "ValidationError") {
+        res
+          .status(BAD_REQUEST)
+          .send({ message: "Invalid input, please try again" });
+      } else {
+        res
+          .status(DEFAULT)
+          .send({ message: "An error has occurred on the server" });
+      }
+    });
+};
+
 const login = (req, res) => {
   const { email, password } = req.body;
 
