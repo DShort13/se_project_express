@@ -1,8 +1,12 @@
 const ClothingItem = require("../models/clothingItem");
-const { DEFAULT, NOT_FOUND, BAD_REQUEST } = require("../utils/errors");
-const ForbiddenError = require("../utils/Errors/ForbiddenError");
+const {
+  DEFAULT,
+  NOT_FOUND,
+  BAD_REQUEST,
+  FORBIDDEN_ERROR,
+} = require("../utils/errors");
 
-module.exports.getClothingItems = (req, res) => {
+const getClothingItems = (req, res) => {
   ClothingItem.find({})
     .populate("owner")
     .then((items) => res.send({ data: items }))
@@ -14,7 +18,7 @@ module.exports.getClothingItems = (req, res) => {
     });
 };
 
-module.exports.createClothingItem = (req, res) => {
+const createClothingItem = (req, res) => {
   const { name, weather, imageUrl } = req.body;
 
   ClothingItem.create({ name, weather, imageUrl, owner: req.user._id })
@@ -35,33 +39,31 @@ module.exports.createClothingItem = (req, res) => {
     });
 };
 
-module.exports.deleteClothingItem = (req, res) => {
+const deleteClothingItem = (req, res) => {
   const { itemId } = req.params;
 
   ClothingItem.findById(itemId)
-    .orFail(() => {
-      const error = new Error("Clothing item not found");
-      error.statusCode = 404;
-      throw error;
-    })
+    .orFail()
     .then((item) => {
       if (item.owner !== req.user._id) {
-        throw new ForbiddenError("This item is not available to you");
+        return res
+          .status(FORBIDDEN_ERROR)
+          .send({ message: "You do not have permission to delete this item" });
       }
 
-      ClothingItem.findByIdAndDelete(itemId)
-        .orFail(() => {
-          const error = new Error("Clothing item not found");
-          error.statusCode = 404;
-          throw error;
-        })
-        .then(() => res.send({ message: "Item deleted" }));
+      return ClothingItem.findByIdAndDelete(itemId)
+        .orFail()
+        .then(() => {
+          if (!item) {
+            return res.status(NOT_FOUND).send({ message: "Item not found." });
+          }
+
+          return res.send({ message: "Item deleted" });
+        });
     })
     .catch((err) => {
       console.error(err);
-      if (err.message === "Clothing item not found") {
-        res.status(NOT_FOUND).send({ message: "Clothing item not found" });
-      } else if (err.name === "CastError") {
+      if (err.name === "CastError") {
         res
           .status(BAD_REQUEST)
           .send({ message: "Invalid input, please try again" });
@@ -73,7 +75,7 @@ module.exports.deleteClothingItem = (req, res) => {
     });
 };
 
-module.exports.likeItem = (req, res) => {
+const likeItem = (req, res) => {
   ClothingItem.findByIdAndUpdate(
     req.params.itemId,
     {
@@ -103,7 +105,7 @@ module.exports.likeItem = (req, res) => {
     });
 };
 
-module.exports.dislikeItem = (req, res) => {
+const dislikeItem = (req, res) => {
   ClothingItem.findByIdAndUpdate(
     req.params.itemId,
     {
@@ -131,4 +133,12 @@ module.exports.dislikeItem = (req, res) => {
           .send({ message: "An error has occurred on the server" });
       }
     });
+};
+
+module.exports = {
+  getClothingItems,
+  createClothingItem,
+  deleteClothingItem,
+  likeItem,
+  dislikeItem,
 };
