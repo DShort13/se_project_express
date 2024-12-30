@@ -42,11 +42,11 @@ const getCurrentUser = (req, res) => {
     });
 };
 
-const createUser = (req, res, next) => {
+const createUser = (req, res) => {
   const { name, email, avatar, password } = req.body;
 
   if (!email) {
-    next(res.status(BAD_REQUEST).send({ message: "Email required" }));
+    return res.status(BAD_REQUEST).send({ message: "Email required" });
   }
 
   return User.findOne({ email }).then((existingUser) => {
@@ -56,30 +56,30 @@ const createUser = (req, res, next) => {
         .send({ message: "A user with this email already exists" });
     }
 
-    return bcrypt.hash(password, 10).then((hash) => {
-      User.create({ name, email, password: hash, avatar })
-        .then((user) =>
-          res
-            .status(201)
-            .send({ name: user.name, email: user.email, avatar: user.avatar })
-        )
-        .catch((err) => {
-          console.error(err);
-          if (err.code === mongoDuplicateError) {
-            return res
-              .status(409)
-              .send({ message: "A user with this email already exists" });
-          }
-          if (err.name === "ValidationError") {
-            return res
-              .status(BAD_REQUEST)
-              .send({ message: "Invalid input, please try again" });
-          }
+    return bcrypt
+      .hash(password, 10)
+      .then((hash) => User.create({ name, email, password: hash, avatar }))
+      .then((user) =>
+        res
+          .status(201)
+          .send({ name: user.name, email: user.email, avatar: user.avatar })
+      )
+      .catch((err) => {
+        console.error(err);
+        if (err.code === mongoDuplicateError) {
           return res
-            .status(DEFAULT)
-            .send({ message: "An error has occurred on the server" });
-        });
-    });
+            .status(CONFLICT_ERROR)
+            .send({ message: "A user with this email already exists" });
+        }
+        if (err.name === "ValidationError") {
+          return res
+            .status(BAD_REQUEST)
+            .send({ message: "Invalid input, please try again" });
+        }
+        return res
+          .status(DEFAULT)
+          .send({ message: "An error has occurred on the server" });
+      });
   });
 };
 
@@ -118,13 +118,11 @@ const updateProfile = (req, res, next) => {
     });
 };
 
-const login = (req, res, next) => {
+const login = (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return res
-      .status(BAD_REQUEST)
-      .send({ message: "Email and password required" });
+    res.status(BAD_REQUEST).send({ message: "Email and password required" });
   }
 
   return User.findUserByCredentials(email, password)
@@ -133,7 +131,7 @@ const login = (req, res, next) => {
         expiresIn: "7d",
       });
 
-      return res.send({ token });
+      res.send({ token });
     })
     .catch((err) => {
       console.error(err);
@@ -142,7 +140,9 @@ const login = (req, res, next) => {
           .status(UNAUTHORISED)
           .send({ message: "Incorrect email or password" });
       }
-      return next(err);
+      return res
+        .status(DEFAULT)
+        .send({ message: "An error has occurred on the server" });
     });
 };
 
