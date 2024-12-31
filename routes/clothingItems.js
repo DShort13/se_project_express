@@ -6,12 +6,12 @@ const {
   dislikeItem,
   likeItem,
 } = require("../controllers/clothingItems");
-const { authorization } = require("../middlewares/auth");
+const auth = require("../middlewares/auth");
 
 router.get("/", getClothingItems);
-router.post("/", authorization, createClothingItem);
-router.delete("/:itemId", authorization, deleteClothingItem);
-router.put("/:itemId/likes", authorization, likeItem);
-router.delete("/:itemId/likes", authorization, dislikeItem);
+router.post("/", auth, createClothingItem);
+router.delete("/:itemId", auth, deleteClothingItem);
+router.put("/:itemId/likes", auth, likeItem);
+router.delete("/:itemId/likes", auth, dislikeItem);
 
 module.exports = router;
