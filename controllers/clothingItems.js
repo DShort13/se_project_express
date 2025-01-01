@@ -43,35 +43,37 @@ const deleteClothingItem = (req, res) => {
   const { itemId } = req.params;
 
   ClothingItem.findById(itemId)
-    .orFail()
+    .orFail(() => {
+      const error = new Error("Item ID not found");
+      error.statusCode = NOT_FOUND;
+      throw error;
+    })
     .then((item) => {
-      if (item.owner !== req.user._id) {
-        return res
-          .status(FORBIDDEN_ERROR)
-          .send({ message: "You do not have permission to delete this item" });
+      if (!item) {
+        return res.status(NOT_FOUND).send({ message: "Item not found." });
       }
-
-      return ClothingItem.findByIdAndDelete(itemId)
-        .orFail()
-        .then(() => {
-          if (!item) {
-            return res.status(NOT_FOUND).send({ message: "Item not found." });
-          }
-
-          return res.send({ message: "Item deleted" });
+      if (item.owner.toString() !== req.user._id) {
+        return res.status(FORBIDDEN_ERROR).send({
+          message: "You do not have permission to delete this item",
         });
+      }
+      return ClothingItem.findByIdAndDelete(itemId).then(() => {
+        res.send({ message: "Item successfully deleted" });
+      });
     })
     .catch((err) => {
       console.error(err);
+      if (err.message === "Item ID not found") {
+        return res.status(NOT_FOUND).send({ message: "Item not found " });
+      }
       if (err.name === "CastError") {
-        res
+        return res
           .status(BAD_REQUEST)
           .send({ message: "Invalid input, please try again" });
-      } else {
-        res
-          .status(DEFAULT)
-          .send({ message: "An error has occurred on the server" });
       }
+      return res
+        .status(DEFAULT)
+        .send({ message: "An error has occurred on the server" });
     });
 };
 
