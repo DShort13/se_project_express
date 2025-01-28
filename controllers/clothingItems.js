@@ -22,8 +22,9 @@ const createClothingItem = (req, res) => {
   const { name, weather, imageUrl } = req.body;
 
   ClothingItem.create({ name, weather, imageUrl, owner: req.user._id })
-    .then((item) => {
-      res.status(201).send({ data: item });
+    .then((item) => item.populate("owner"))
+    .then((populatedItem) => {
+      res.status(201).send({ data: populatedItem });
     })
     .catch((err) => {
       console.error(err);
@@ -87,6 +88,7 @@ const likeItem = (req, res) => {
       error.statusCode = 404;
       throw error;
     })
+    .populate("owner")
     .then((item) => res.send({ data: item }))
     .catch((err) => {
       console.error(err);
@@ -117,6 +119,7 @@ const dislikeItem = (req, res) => {
       error.statusCode = 404;
       throw error;
     })
+    .populate("owner")
     .then((item) => res.send({ data: item }))
     .catch((err) => {
       console.error(err);
