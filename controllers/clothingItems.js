@@ -10,12 +10,7 @@ const getClothingItems = (req, res) => {
   ClothingItem.find({})
     .populate("owner")
     .then((items) => res.send({ data: items }))
-    .catch((err) => {
-      console.error(err);
-      res
-        .status(DEFAULT)
-        .send({ message: "An error has occurred on the server" });
-    });
+    .catch(next);
 };
 
 const createClothingItem = (req, res) => {
@@ -33,9 +28,7 @@ const createClothingItem = (req, res) => {
           .status(BAD_REQUEST)
           .send({ message: "Invalid input, please try again" });
       } else {
-        res
-          .status(DEFAULT)
-          .send({ message: "An error has occurred on the server" });
+        next(err);
       }
     });
 };
@@ -69,9 +62,7 @@ const deleteClothingItem = (req, res) => {
           .status(BAD_REQUEST)
           .send({ message: "Invalid input, please try again" });
       }
-      return res
-        .status(DEFAULT)
-        .send({ message: "An error has occurred on the server" });
+      return next(err);
     });
 };
 
@@ -99,9 +90,7 @@ const likeItem = (req, res) => {
           .status(BAD_REQUEST)
           .send({ message: "Invalid input, please try again" });
       } else {
-        res
-          .status(DEFAULT)
-          .send({ message: "An error has occurred on the server" });
+        next(err);
       }
     });
 };
@@ -130,9 +119,7 @@ const dislikeItem = (req, res) => {
           .status(BAD_REQUEST)
           .send({ message: "Invalid input, please try again" });
       } else {
-        res
-          .status(DEFAULT)
-          .send({ message: "An error has occurred on the server" });
+        next(err);
       }
     });
 };
