@@ -70,3 +70,11 @@ const validateId = celebrate({
     itemId: Joi.string().required().hex().length(24),
   }),
 });
+
+module.exports = {
+  validateCreateItem,
+  validateCreateUser,
+  validateLogIn,
+  validateItemId,
+  validateId,
+};
