@@ -1,10 +1,7 @@
 const ClothingItem = require("../models/clothingItem");
-const {
-  DEFAULT,
-  NOT_FOUND,
-  BAD_REQUEST,
-  FORBIDDEN_ERROR,
-} = require("../utils/errors");
+const BadRequestError = require("../utils/errors/BadRequestError");
+const ForbiddenError = require("../utils/errors/ForbiddenError");
+const NotFoundError = require("../utils/errors/NotFoundError");
 
 const getClothingItems = (req, res) => {
   ClothingItem.find({})
@@ -24,9 +21,7 @@ const createClothingItem = (req, res) => {
     .catch((err) => {
       console.error(err);
       if (err.name === "ValidationError") {
-        res
-          .status(BAD_REQUEST)
-          .send({ message: "Invalid input, please try again" });
+        next(new BadRequestError("Invalid input, please try again"));
       } else {
         next(err);
       }
@@ -39,14 +34,14 @@ const deleteClothingItem = (req, res) => {
   ClothingItem.findById(itemId)
     .orFail(() => {
       const error = new Error("Item ID not found");
-      error.statusCode = NOT_FOUND;
+      error.statusCode = 404;
       throw error;
     })
     .then((item) => {
       if (item.owner.toString() !== req.user._id) {
-        return res.status(FORBIDDEN_ERROR).send({
-          message: "You do not have permission to delete this item",
-        });
+        return next(
+          new ForbiddenError("You do not have permission to delete this item")
+        );
       }
       return ClothingItem.findByIdAndDelete(itemId).then(() => {
         res.send({ message: "Item successfully deleted" });
@@ -55,12 +50,10 @@ const deleteClothingItem = (req, res) => {
     .catch((err) => {
       console.error(err);
       if (err.message === "Item ID not found") {
-        return res.status(NOT_FOUND).send({ message: "Item not found " });
+        return next(new NotFoundError("Item not found"));
       }
       if (err.name === "CastError") {
-        return res
-          .status(BAD_REQUEST)
-          .send({ message: "Invalid input, please try again" });
+        return next(new BadRequestError("Invalid input, please try again"));
       }
       return next(err);
     });
@@ -84,11 +77,9 @@ const likeItem = (req, res) => {
     .catch((err) => {
       console.error(err);
       if (err.message === "Clothing item not found") {
-        res.status(NOT_FOUND).send({ message: "Clothing item not found" });
+        next(new NotFoundError("Clothing item not found"));
       } else if (err.name === "CastError") {
-        res
-          .status(BAD_REQUEST)
-          .send({ message: "Invalid input, please try again" });
+        next(new BadRequestError("Invalid input, please try again"));
       } else {
         next(err);
       }
@@ -113,11 +104,9 @@ const dislikeItem = (req, res) => {
     .catch((err) => {
       console.error(err);
       if (err.message === "Clothing item not found") {
-        res.status(NOT_FOUND).send({ message: "Clothing item not found" });
+        next(new NotFoundError("Clothing item not found"));
       } else if (err.name === "CastError") {
-        res
-          .status(BAD_REQUEST)
-          .send({ message: "Invalid input, please try again" });
+        next(new BadRequestError("Invalid input, please try again"));
       } else {
         next(err);
       }
