@@ -4,6 +4,7 @@ const cors = require("cors");
 const { errors } = require("celebrate");
 const routes = require("./routes/index");
 const errorHandler = require("./middlewares/errorHandler");
+const { requestLogger, errorLogger } = require("./middlewares/logger");
 
 const app = express();
 
@@ -13,10 +14,17 @@ mongoose.connect("mongodb://127.0.0.1:27017/wtwr_db", () => {
   console.log("connected to DB", (e) => console.log("DB error", e));
 });
 
-// routes
 app.use(express.json());
 app.use(cors());
+
+// enable request logger
+app.use(requestLogger);
+
+// routes
 app.use("/", routes);
+
+// enable error logger
+app.use(errorLogger);
 
 // celebrate error handler
 app.use(errors());
