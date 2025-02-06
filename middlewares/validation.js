@@ -19,6 +19,7 @@ const validateCreateItem = celebrate({
       "string.empty": 'The "imageUrl" field must not be filled in',
       "string.uri": 'The "imageUrl" field must be a valid url',
     }),
+    weather: Joi.string().required().valid("hot", "warm", "cold"),
   }),
 });
 
